@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>石油大学的井芹仁菜和千早爱音</title>
+    <!-- 引入css资源 -->
+    <link rel="stylesheet" href="https://a.amap.com/jsapi_demos/static/demo-center/css/demo-center.css" />
+    <link rel="stylesheet" href="index.css">
+    <!-- 引入JS资源 -->
+    <script src="store.js"></script>
+    <script type="text/javascript">
+        window._AMapSecurityConfig = {
+            securityJsCode: "6a0c36cb4919388ba4b5998c15b97e5c",
+        }
+    </script>
+    <script type="text/javascript"
+        src="https://webapi.amap.com/maps?v=2.0&key=430c7aedbdc043f6de35e0ad9715228e&plugin=AMap.GeoJSON">
+        </script>
+
+</head>
+
+<body>
+    <!-- 创建地图容器 -->
+    <div id="container" style="margin: auto;top:50px"></div>
+    <!-- 消息窗口 -->
+    <div class="info">点击标注地点，可记录打卡次数</div>
+    <!-- 动画按钮 -->
+    <div class="input-card" style="width:10rem;position:relative;left: 600px;bottom: 30px;">
+        <h4>推荐路线</h4>
+        <div class="input-item">
+            <button class="btn" onclick="startAnimation()">开始动画</button>
+        </div>
+    </div>
+
+
+    <script>
+        // 创建地图对象
+        var map = new AMap.Map('container', {
+            center: [120.175, 35.941785],
+            viewMode: '3D',
+            zoom: 16,
+            pitch: 45,
+        })
+    </script>
+
+    <!-- 地图控件 -->
+    <script>
+        // 添加控件函数
+        function addControls() {
+            AMap.plugin([
+                'AMap.ToolBar', // 缩放工具条
+                'AMap.Scale', // 比例尺
+                'AMap.ControlBar', // 控制罗盘控件
+                'AMap.Geolocation', // 定位控件
+                'AMap.HawkEye', // 鹰眼控件
+                'AMap.MapType',// 图层切换控件
+                'AMap.MoveAnimation' //动画插件
+            ], function () {
+                // 实例化控件
+                var toolBar = new AMap.ToolBar(); // 缩放工具条
+                var scale = new AMap.Scale(); // 比例尺
+                var controlBar = new AMap.ControlBar(); // 控制罗盘控件
+                var geolocation = new AMap.Geolocation(); // 定位控件
+                var hawkEye = new AMap.HawkEye(); // 鹰眼控件
+                var mapType = new AMap.MapType({
+                    position: {
+                        right: '30px',
+                        top: '100px',
+                    }
+                }); // 图层切换控件
+
+                // 添加控件到地图中
+                map.addControl(toolBar); // 添加缩放工具条
+                map.addControl(scale); // 添加比例尺
+                map.addControl(controlBar); // 添加控制罗盘控件
+                map.addControl(geolocation); // 添加定位控件
+                map.addControl(hawkEye); // 添加鹰眼控件
+                map.addControl(mapType); // 添加图层切换控件
+            });
+        }
+
+        // 调用函数以添加控件
+        addControls();
+    </script>
+
+
+    <!-- 标注效果 -->
+    <script>
+        // 全局变量，保存geojson
+        var geojson = new AMap.GeoJSON({
+            geoJSON: null,
+        })
+
+        // 导入数据
+        if (JSON.stringify(getData()).length > 4) {
+            geojson.importData(getData());
+
+            // 恢复旧数据事件
+            geojson.eachOverlay(function (item) {
+                // 重新设置图标
+                item.setIcon(new AMap.Icon({
+                    image: 'https://picx.zhimg.com/v2-021158f8cc1c16b7f54af4913297b3be_r.jpg',
+                    size: new AMap.Size(32, 32), // 图标大小
+                    imageSize: new AMap.Size(32, 32) // 图片显示大小
+                }));
+
+                item.on('click', function (e) {
+                    var ext = item.getExtData()
+                    ext._geoJsonProperties.click = ext._geoJsonProperties.click + 1
+                    var click = ext._geoJsonProperties.click
+                    saveData(geojson.toGeoJSON())
+                    alert(e.lnglat + '被点击了' + click + "次");
+
+                    // 使用信息框显示
+                    var infowindow = new AMap.InfoWindow({
+                        anchor: 'top-center',
+                        content: '<div>打卡了' + click + '次</div>'
+                    })
+                    // 显示消息窗口
+                    infowindow.open(map, item.getPosition())
+                })
+            })
+        }
+
+        map.add(geojson)
+
+        // 监听地图点击事件
+        map.on('click', function (e) {
+
+            var marker = new AMap.Marker({
+                position: e.lnglat,
+                extData: {
+                    _geoJsonProperties: {
+                        gid: geojson.getOverlays.length + 1,
+                        click: 0,
+                    }
+                },
+                icon: new AMap.Icon({
+                    image: 'https://picx.zhimg.com/v2-021158f8cc1c16b7f54af4913297b3be_r.jpg',
+                    size: new AMap.Size(32, 32), // 图标大小
+                    imageSize: new AMap.Size(32, 32) // 图片显示大小
+                }),
+            })
+            //map.add(marker)
+
+            // maker覆盖物点击事件
+            marker.on('click', function (e) {
+                var ext = marker.getExtData()
+                ext._geoJsonProperties.click = ext._geoJsonProperties.click + 1
+                var click = ext._geoJsonProperties.click
+                alert(e.lnglat + '被点击了' + click + "次");
+                // 使用信息框显示
+                var infowindow = new AMap.InfoWindow({
+                    anchor: 'top-center',
+                    content: '<div>打卡了' + click + '次</div>'
+                })
+                // 显示消息窗口
+                infowindow.open(map, marker.getPosition())
+            })
+
+            //geojson管理覆盖物
+            geojson.addOverlay(marker)
+
+            //保存数据(geojson保存为标准GeoJSON)
+            saveData(geojson.toGeoJSON())
+        })
+    </script>
+
+    <!-- 函数 -->
+    <script>
+        function startAnimation() {
+            // 实现路径规划
+            AMap.plugin("AMap.Driving", function () {
+                var driving = new AMap.Driving({
+                    map: map,
+                    policy: AMap.DrivingPolicy.LEAST_TIME
+                })
+                // 起点与终点
+                var start = new AMap.LngLat(120.178826, 35.939103)
+                var end = new AMap.LngLat(120.170465, 35.945419)
+
+                // 通过geojson得到每个点的坐标
+                var opts = {
+                    waypoints: []
+                }
+                // 实现途径点
+                geojson.eachOverlay(function (item) {
+                    opts.waypoints.push(item.getPosition())
+                })
+
+                driving.search(start, end, opts, function (status, result) {
+                    if (status == 'complete') {
+                        alert('ok')
+                        // 轨迹模拟
+                        console.log(result)
+
+                        var lineArr = []
+
+                        result.routes[0].steps.forEach(function(item){
+                            lineArr.push(...item.path)
+                        })
+
+                        var marker = new AMap.Marker({
+                            map: map,
+                            position: start,
+                            icon: new AMap.Icon({
+                                image: 'https://img14.360buyimg.com/pop/jfs/t1/226823/1/15582/43509/6639dea8F719cfdf3/1f934d4f389fb225.png',
+                                size: new AMap.Size(48, 48), // 图标大小
+                                imageSize: new AMap.Size(48, 48) // 图片显示大小
+                            }),
+                            offset: new AMap.Pixel(-26, -13),
+                            angle: 0,
+                            //icon:'https://webapi.amap.com/images/cae.png',
+                            autoRotation: true,
+                        })
+
+                        var passedPolyline = new AMap.Polyline({
+                            map:map,
+                            strokeColor:"#39c5bb",
+                            strokeWeight:6
+                        })
+
+                        marker.on("moving",function(e){
+                            passedPolyline.setPath(e.passedPath)
+                        })
+                        map.setFitView()
+
+                        marker.moveAlong(lineArr,{
+                            duration:500,
+                            autoRotation:true
+                        })
+                    } else {
+                        alert('error')
+                    }
+                })
+            })
+        }
+    </script>
+
+</body>
+
+</html>
